@@ -1,10 +1,13 @@
 package main
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 type XMLPage struct {
-	Title string `xml:"title"`
-	Redir struct {
+	Title_ string `xml:"title"`
+	Redir  struct {
 		Title string `xml:"title,attr"`
 	} `xml:"redirect"`
 	Text string `xml:"revision>text"`
@@ -16,6 +19,10 @@ const linkLimit = 1000
 const pageLinkRegexConstraints = "(?P<link>[a-zA-Z0-9]*\\s*[a-zA-Z0-9]*)"
 
 var pageLinkRegex = regexp.MustCompile("\\[\\[" + pageLinkRegexConstraints + "\\]\\]")
+
+func (p XMLPage) Title() string {
+	return strings.ToLower(p.Title_)
+}
 
 func (p XMLPage) links() []string {
 	r := pageLinkRegex.FindAllStringSubmatch(p.Text, linkLimit)

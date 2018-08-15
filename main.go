@@ -7,7 +7,10 @@ import (
 	"os"
 )
 
-const defaultFile = "wikidumps/simplewiki-20170820-pages-meta-current.xml"
+const (
+	defaultFile = "wikidumps/simplewiki-20170820-pages-meta-current.xml"
+	readAmount  = 1
+)
 
 var inputFile = flag.String("infile", defaultFile, "Input XML dump file path")
 
@@ -22,9 +25,9 @@ func main() {
 	defer xmlFile.Close()
 
 	decoder := xml.NewDecoder(xmlFile)
-	readAmount := int64(1)
 	var total int64
 	var inElement string
+	g := NewGraph()
 
 mainLoop:
 	for {
@@ -44,11 +47,10 @@ mainLoop:
 				// decode a whole chunk of following XML into the
 				// variable p which is a Page
 				decoder.DecodeElement(&p, &se)
-				searchPage(p)
+				g.AddXMLPage(p)
 
 				total++
 				if total > readAmount-1 {
-					fmt.Printf("Parsed %d pages\n", total)
 					break mainLoop
 				}
 
@@ -58,10 +60,6 @@ mainLoop:
 
 	}
 
-	fmt.Printf("Total articles: %d \n", total)
-}
-
-func searchPage(p XMLPage) {
-	links := p.links()
-	fmt.Printf("Page Title: %s\nLinks: %#v\n", p.Title, links)
+	fmt.Printf("Graph:\n%s", g.String())
+	fmt.Printf("Total read articles: %d \n", total)
 }

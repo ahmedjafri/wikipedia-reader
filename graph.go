@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 )
@@ -13,15 +12,38 @@ type Graph struct {
 
 type PageNode struct {
 	Title string
-	Links []PageNode
+	Links []*PageNode
+}
+
+// Convenient constructer to init the map
+func NewGraph() *Graph {
+	var g Graph
+	g.NodeMap = make(map[string]*PageNode, 0)
+	return &g
 }
 
 func (g *Graph) AddXMLPage(pxml XMLPage) {
 	g.Lock()
 	defer g.Unlock()
 
-	links := pxml.links()
-	fmt.Printf("Page Title: %s\nLinks: %#v\n", pxml.Title, links)
+	stringLinks := pxml.links()
+	pn := g.GetNodeOrCreate(pxml.Title())
+	pn.Links = make([]*PageNode, len(stringLinks))
+	// Add links to
+	for i, l := range stringLinks {
+		pn.Links[i] = g.GetNodeOrCreate(l)
+
+	}
+}
+
+func (g *Graph) GetNodeOrCreate(title string) *PageNode {
+	if pn, ok := g.NodeMap[title]; ok {
+		return pn
+	}
+
+	pn := &PageNode{Title: title}
+	g.NodeMap[title] = pn
+	return pn
 }
 
 func (p PageNode) String() string {
