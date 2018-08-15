@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"strings"
 	"sync"
 )
@@ -14,6 +13,9 @@ type Graph struct {
 type PageNode struct {
 	Title string
 	Links []*PageNode
+
+	// used by BFS
+	Path []string
 }
 
 // Convenient constructer to init the map
@@ -73,27 +75,4 @@ func (g *Graph) String() string {
 	}
 
 	return s.String()
-}
-
-func ReadGraphFile(filename string) *Graph {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
-
-	g := NewGraph()
-	dataString := string(data)
-	lines := strings.Split(dataString, "\n")
-	for _, line := range lines {
-		lineParts := strings.Split(line, "=")
-		if len(lineParts) != 2 {
-			Log.Error("Line does not contain two parts", "Line", line)
-			continue
-		}
-
-		links := lineParts[1]
-		g.addPageStrings(lineParts[0], strings.Split(links, ","))
-	}
-
-	return g
 }
