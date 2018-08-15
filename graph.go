@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"strings"
 	"sync"
 )
@@ -23,11 +24,15 @@ func NewGraph() *Graph {
 }
 
 func (g *Graph) AddXMLPage(pxml XMLPage) {
+	g.addPageStrings(pxml.Title(), pxml.links())
+}
+
+func (g *Graph) addPageStrings(pageTitle string, pageLinks []string) {
 	g.Lock()
 	defer g.Unlock()
 
-	stringLinks := pxml.links()
-	pn := g.GetNodeOrCreate(pxml.Title())
+	stringLinks := pageLinks
+	pn := g.GetNodeOrCreate(pageTitle)
 	pn.Links = make([]*PageNode, len(stringLinks))
 	// Add links to
 	for i, l := range stringLinks {
@@ -68,4 +73,27 @@ func (g *Graph) String() string {
 	}
 
 	return s.String()
+}
+
+func ReadGraphFile(filename string) *Graph {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	g := NewGraph()
+	dataString := string(data)
+	lines := strings.Split(dataString, "\n")
+	for _, line := range lines {
+		lineParts := strings.Split(line, "=")
+		if len(lineParts) != 2 {
+			Log.Error("Line does not contain two parts", "Line", line)
+			continue
+		}
+
+		links := lineParts[1]
+		g.addPageStrings(lineParts[0], strings.Split(links, ","))
+	}
+
+	return g
 }
